@@ -1,0 +1,107 @@
+{% extends 'homepage/hp-base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}Dashboard -{{user.username}}{% endblock %}
+
+{% block body_block %}
+<style media="screen">
+  .box {
+    border: 2px solid grey;
+    border-radius: 10px;
+    color: black;
+    width: 80% !important;
+    height: auto;
+    margin-bottom: 30px;
+    margin-top: 30px;
+    margin-left: 15px !important;
+    text-indent: 15px;
+  }
+  textarea {
+    width: 65%;
+    border: 2px solid #B22222;
+  }
+  .seen {
+    border: 1px solid grey;
+    width: 100%;
+  }
+  .bttn {
+    width: 50%;
+    position: inherit;;
+  }
+  .img-size{
+    width: 50%;
+    border-radius: 50%;
+  }
+</style>
+<div class="container">
+  <div class="container">
+    <h1>hello, {{user.username}}</h1>
+  </div>
+  <!--post form-->
+  <div class="container">
+    <form class="form" action="/{{user.username}}/add_post" method="post">
+      {% csrf_token %}
+    {% for hidden in postform.hidden_fields %}
+      {{hidden}}
+    {% endfor %}
+      <h3>Did you Mini-Tweet today?</h3>
+      <textarea cols="40" id="id_content" name="content" rows="10"></textarea>
+      <hr>
+      <input type="submit" value="Post" class="btn btn-success btn-lg">
+    </form>
+  </div>
+  <!--end post form-->
+  <hr>
+  <hr>
+  <hr>
+  <!--post list-->
+  <div >
+  {% for post in post_list %}
+        <div class="container box">
+          <div class="row">
+            <div class="col-sm-3">
+              <img src="/media/{{ profile.display_picture }}"  class="img-size" alt=""/>
+            </div>
+            <div class="col-sm-9">
+              <h3>{{ post.user.username }}</h3>
+            </div>
+          </div>
+          <div class="row">
+            <h6>{{ post.post_time }}</h6>
+          </div>
+          <hr class="seen">
+          <div class="row">
+            {{ post.content }}
+          </div>
+          <hr class="seen">
+          <div class="row">
+            <div class="col-sm-6">
+              <h6>Likes:<strong id="like-count{{post.id}}">{{ post.likes }}</strong></h6>
+              <button type="submit" id="like{{post.id}}" data-pid={{ post.id }} class="btn btn-xs btn-success bttn like">Like</button>
+            </div>
+            <div class="col-sm-6">
+              <h6>Comments:<strong>{{ post.comments }}</strong></h6>
+              <a href="/show_post/{{ post.id }}" class="btn btn-xs btn-danger bttn">Comment</a>
+            </div>
+          </div>
+        </div>
+  {% endfor %}
+</div>
+<!--end post list-->
+</div>
+
+<script>
+$(function(){
+  $(".like").click(function(event){
+    var pid = $(event.target).attr('data-pid');
+    var id = $(event.target).attr('id');
+    var lk ="#"+"like-count" +pid;
+    var lp ="#"+"like"+pid;
+    $.get('/like_post', {'pid':pid}, function(data){
+      $(lk).html(data);
+      $(lp).hide();
+    });
+  });
+});
+</script>
+{% endblock %}

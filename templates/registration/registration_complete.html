@@ -1,0 +1,13 @@
+{% extends 'mtweet/base.html' %}
+{% load staticfiles %}
+{% block title_block %}Registration Successfull{% endblock %}
+
+{% block body_block %}
+  <div class="container">
+    <h1>Registration Successfull</h1>
+    <hr>
+    <h1>Welcome to the Mini-Twitter family!</h1>
+    <hr>
+    <a href="{% url 'add_profile' user.username %}" class="btn btn-success btn-lg">Next</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'homepage/hp-base.html' %}
+{% load staticfiles %}
+{% load friendshiptags %}
+
+{% block title_block %}Profile- {{pro_user.username}}{% endblock %}
+
+{% block body_block %}
+<style media="screen">
+  .img-size {
+    width: 25%;
+    border-radius: 50%;
+  }
+</style>
+
+  <div class="container">
+    <div class="row">
+      <img src="{{MEDIA_URL}}{{pro_profile.display_picture}}" alt="{{pro_user.username}}'s display picture" class="img-size img-thumbnail">
+    </div>
+    <div class="container">
+      <h1>{{ pro_profile.firstname }} {{ pro_profile.lastname }}</h1>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-6">
+            <h3>Hometown:</h3>
+        </div>
+        <div class="col-sm-6">
+          <h3>{{ pro_profile.hometown }}</h3>
+        </div>
+      </div>
+
+    <div class="row">
+      <div class="col-sm-6">
+          <h3>Mobile:</h3>
+      </div>
+      <div class="col-sm-6">
+        <h3>{{ pro_profile.mobile }}</h3>
+      </div>
+    </div>
+  </div>
+<hr><hr>
+{% ifnotequal user pro_user%}
+  <button type="button" name="button" class="btn btn-warning btn-lg" id="follow" data-username="{{pro_user.username}}">follow</button>
+{% endifnotequal %}
+<hr>
+<hr>
+{% ifequal user pro_user %}
+  <div class="conatiner">
+    <div class="row">
+      <div class="col-md-6">
+        <button type="button" name="button" id="following" class="btn btn-sm btn-alert">Following</button>
+        <div id="fol">
+          <p>{% following user %}</p>
+        </div>
+      </div>
+      <div class="col-smd-6">
+        <button type="button" name="button" id="follower" class="btn btn-sm btn-alert">Followers</button>
+        <div id="flwr">
+          <p>{% followers request.user %}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endifequal %}
+</div>
+
+<script>
+  $(function(){
+    $('#follow').click(function(){
+      var username = $('#follow').attr('data-username');
+      $.get('/add_follower', {'username':username}, function(){
+        alert('followed');
+      });
+  });
+});
+$(function(){
+  $('#fol').hide();
+  $("#following").click(function(){
+    $('#fol').toggle();
+  });
+});
+$(function(){
+  $('#flwr').hide();
+  $("#follower").click(function(){
+    $('#flwr').toggle();
+  });
+});
+</script>
+
+{% endblock %}

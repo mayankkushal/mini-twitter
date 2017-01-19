@@ -1,0 +1,16 @@
+{% extends 'homepage/hp-base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}User List{% endblock %}
+
+{% block body_block %}
+  <div class="container">
+    {% for users in user_list %}
+      {% ifnotequal user.username users.username %}
+      <div class="container">
+        <h2><a href="{% url 'profile' users.username %}">{{ users.username }}</a></h2>
+      </div>
+      {% endifnotequal %}
+    {% endfor %}
+  </div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'mtweet/base.html' %}
+{% load staticfiles %}
+{% block title_block %}Add Profile{% endblock %}
+
+{% block head_block %}
+  <style media="screen">
+    body {
+      background: black!important;
+    }
+    .jumbotron {
+      background-color: inherit;
+    }
+    .container {
+      max-width: 600px;
+    }
+  </style>
+{% endblock %}
+{% block body_block %}
+<link href="http://v4-alpha.getbootstrap.com/examples/signin/signin.css" rel="stylesheet">
+
+<div class="jumbotron">
+  <h1>Complete your profile</h1>
+</div>
+<div class="container">
+  <form action="/{{ user.username }}/add_profile" method="post" enctype='multipart/form-data' >
+    {% csrf_token %}
+    <p>
+      <input id="id_display_picture" name="display_picture" type="file">
+    </p>
+    <p class="required">
+      <input id="id_firstname" maxlength="128" name="firstname" type="text" placeholder="First Name" required autofocus class="form-control">
+    </p>
+    <p class="required">
+      <input id="id_lastname" maxlength="128" name="lastname" type="text" placeholder="Last Name" required class="form-control">
+    </p>
+    <p>
+      <select id="id_gender" name="gender">
+        <option value="" selected="selected">Gender</option>
+        <option value="M">Male</option>
+        <option value="F">Female</option>
+      </select>
+    </p>
+    <p>
+      <input id="id_mobile" name="mobile" type="number" placeholder="Mobile Number">
+    </p>
+    <input type="submit" value="Submit" class="btn btn-lg btn-primary">
+  </form>
+</div>
+{% endblock %}

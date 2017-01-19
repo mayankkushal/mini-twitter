@@ -1,0 +1,75 @@
+{%extends 'mtweet/base.html'%}
+{% load staticfiles %}
+
+{% block body_block %}
+<style media="screen">
+  input[type='text']{
+    width: 50%;
+  }
+  li {
+    color: black;
+  }
+</style>
+
+
+<div class="conatainer">
+  <div class="container">
+    <div class="row">
+      <h2>{{ post.user.username}}</h2>
+    </div>
+    <div class="row">
+      <h5>{{ post.post_time}}</h5>
+    </div>
+    <hr>
+    <div class="row" style="color:black">
+      <p>{{ post.content }}</p>
+    </div>
+  </div>
+<hr>
+  <div class="container">
+    <form id=comment-form action="/add_comment" method="post">
+      {% csrf_token %}
+      {{ comment_form }}
+      <input type="hidden" name="pid" value="{{post.id}}", id="pid">
+      <input type="submit"  value="Comment">
+    </form>
+  </div>
+
+  <div class="container">
+    <h1>comments</h1>
+    <ul id="show_comm">
+
+    </ul>
+    {% if not comment_list %}
+    <li>No comments. Be the first one to comment!</li>
+    {% else %}
+    {% for comment in comment_list %}
+    <ul>
+      <li><strong>{{comment.poster}}</strong> says: {{comment.comment}}</li>
+    </ul>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+  <script>
+  $(document).on('submit', '#comment-form', function(e){
+    e.preventDefault();
+    $.ajax({
+      type:"POST",
+      url:'/add_comment',
+      data:{
+      comment:$("#id_comment").val(),
+      pid:$("#pid").val(),
+      csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+      },
+      success:function(data){
+          $('#id_comment').val('');
+          $("#show_comm").append('<li><strong>' + data.user + "</strong> says: " + data.comment + '</li>');
+      },
+    });
+  });
+
+  </script>
+
+{% endblock %}
