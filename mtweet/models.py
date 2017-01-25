@@ -40,3 +40,9 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.poster
+
+class Like(models.Model):
+    user = models.ForeignKey(User)
+    post = models.ForeignKey(Post)
+    created = models.DateTimeField(auto_now_add=True)
+

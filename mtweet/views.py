@@ -1,11 +1,18 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from mtweet.forms import PostForm, CommentForm, UserProfileForm
-from mtweet.models import UserProfile, Post, Comment
+from mtweet.models import UserProfile, Post, Comment, Like
 from django.contrib.auth.models import User
 from friendship.models import Friend, Follow
 from django.http import HttpResponse
 import json
+from django.core import serializers
+from django.db.models.signals import post_save
+from notifications.signals import notify
+
+
+def my_handler(sender, instance, created, **kwargs):
+    notify.send(instance, recipient=Post.user, verb='was saved')
 
 def index(request):
 	return render(request, 'mtweet/index.html')
@@ -15,10 +22,23 @@ def home_page(request):
 	user = request.user
 	post_form = PostForm()
 	post_list =[]
+	profile = UserProfile.objects.get(user=user)
 	all_following = Follow.objects.following(user)
 	for following in all_following:
 		post_list += Post.objects.filter(user=following).order_by('-post_time')
-	context_dict = {'user':user, 'post_form':post_form, 'post_list':post_list}
+	def insertionSort(alist):
+	   for index in range(1,len(alist)):
+	    currentvalue = alist[index].post_time
+	    currentuser = alist[index]
+	    position = index
+	    while position>0 and alist[position-1].post_time<currentvalue:
+	        alist[position]=alist[position-1]
+	        position = position-1
+	    alist[position]=currentuser
+	insertionSort(post_list)
+	unread = user.notifications.unread()
+	
+	context_dict = {'post_form':post_form, 'post_list':post_list, 'unread':unread, 'profile':profile}
 	return render(request, 'homepage/home_page.html', context_dict)
 
 @login_required
@@ -27,13 +47,17 @@ def profile(request, username):
 	pro_user = User.objects.get(username=username)
 	profile = UserProfile.objects.get(user=user)
 	pro_profile = UserProfile.objects.get(user=pro_user)
-	context_dict = {'user':user, 'profile':profile, 'pro_user':pro_user, 'pro_profile':pro_profile}
+	post_list_user = Post.objects.filter(user=user).order_by('-post_time')
+	post_list_pro = Post.objects.filter(user=pro_user).order_by("-post_time")
+	context_dict = {'user':user, 'profile':profile, 'pro_user':pro_user, 'pro_profile':pro_profile, 
+					'post_list_user':post_list_user, 'post_list_pro':post_list_pro}
 	return render(request, 'homepage/profile.html', context_dict)
 
 @login_required
 def show_user(request):
 	user_list = User.objects.all().order_by('username')
-	context_dict = {'user_list':user_list}
+	profile = UserProfile.objects.get(user=request.user)
+	context_dict = {'user_list':user_list, 'profile':profile}
 	return render(request, 'homepage/show_user.html', context_dict)
 
 def add_profile(request, username):
@@ -44,21 +68,22 @@ def add_profile(request, username):
 			profile = profileform.save(commit=False)
 			profile.user = user
 			profile.save()
-		return home_page(request)
+		return redirect(home_page)
 	else:
 		profileform = UserProfileForm()
 	return render(request, 'mtweet/add_profile.html', {'profileform':profileform})
 
 @login_required
-def add_post(request, username):
+def add_post(request):
 	user = request.user
 	if request.method == 'POST':
-		postform = PostForm(request.POST)
-		if postform.is_valid():
-			post = postform.save(commit=False)
-			post.user = user
-			post.save()
-		return home_page(request)
+		content = request.POST['content']
+		Post.objects.create(
+				user=user,
+				content=content,
+			)
+
+		return HttpResponse('')
 	else:
 		return home_page(request)
 
@@ -89,9 +114,12 @@ def add_comment(request):
 					comment=comment,
 					poster=request.user.username
 				)
+			post.comments += 1
+			post.save()
 			data = {}
 			data['comment'] = comment
 			data['user'] = request.user.username
+			notify.send(request.user, recipient=post.user, verb='commented on your post', target=post.content)
 			return HttpResponse(json.dumps(data), content_type='application/json')
 		else:
 			return HttpResponse("No such post")
@@ -102,10 +130,16 @@ def like_post(request):
 		pid = request.GET['pid']
 		post = Post.objects.get(id=pid)
 		if post:
-			likes = post.likes + 1
-			post.likes = likes
-			post.save()
-			return HttpResponse(likes)
+			new_like, created = Like.objects.get_or_create(user=request.user, post_id=pid)
+			if not created:
+				new_like.delete()
+				liked = False
+			else:
+				liked = True
+			count = Like.objects.filter(post=post).count()
+			data = {'count':count, 'liked':liked}
+			return HttpResponse(json.dumps(data), content_type='application/json')
+
 
 @login_required
 def add_follower(request):
@@ -115,3 +149,28 @@ def add_follower(request):
 		Follow.objects.add_follower(request.user, follow_user)
 		return HttpResponse('')
 
+
+def like_count(request):
+	if request.method == "GET":
+		pid = request.GET['pid']
+		post = get_object_or_404(Post, id=pid)
+		liked = Like.objects.filter(user=request.user, post=post)
+		if liked:
+			liked_this = True
+		else:
+			liked_this = False
+		count = Like.objects.filter(post=post).count()
+		data = {}
+		data['count'] = count
+		data['liked_this'] = liked_this
+		return HttpResponse(json.dumps(data), content_type='application/json')
+
+def in_search(request):
+	if request.method == 'GET':
+		usr_lst = []
+		search = request.GET['search']
+		if search == '':
+			return HttpResponse('')
+		serial = serializers.serialize('json', User.objects.filter(username__istartswith=search), fields=('username'))
+		return HttpResponse(serial, content_type='application/json')
+		
