@@ -119,7 +119,6 @@ def add_comment(request):
 			data = {}
 			data['comment'] = comment
 			data['user'] = request.user.username
-			notify.send(request.user, recipient=post.user, verb='commented on your post', target=post.content)
 			return HttpResponse(json.dumps(data), content_type='application/json')
 		else:
 			return HttpResponse("No such post")
