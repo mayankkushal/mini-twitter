@@ -19,6 +19,7 @@ from mtweet import urls
 from django.conf.urls.static import static
 from django.conf import settings
 from registration.backends.simple.views import RegistrationView
+import notifications.urls
 
 
 
@@ -26,5 +27,6 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^', include('mtweet.urls')),
     url(r'^account/', include('registration.backends.simple.urls')),
-    url(r'^friendship/', include('friendship.urls'))
+    url(r'^friendship/', include('friendship.urls')),
+    url('^inbox/notifications/', include(notifications.urls, namespace='notifications')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

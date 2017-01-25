@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'mtweet',
     'registration',
     'friendship',
+    'notifications',
 ]
 
 MIDDLEWARE_CLASSES = [
