@@ -30,7 +30,7 @@ SECRET_KEY = 'uv_povd!3$jar*h)uokhju5%bqf2_yc#^62u^5uz=z4$s$107n'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mtwitt.herokuapp.com/', ]
 
 
 # Application definition
