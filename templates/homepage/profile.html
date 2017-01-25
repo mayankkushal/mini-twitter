@@ -10,6 +10,41 @@
     width: 25%;
     border-radius: 50%;
   }
+  .bttn{
+    background: white;
+    border: 2px;
+    border-color: #0074D9;
+    border-style: solid;
+    border-radius: 7px !important;
+    color: #0074D9;
+  }
+  .bttn:hover{
+    box-shadow: 2px 2px 2px #0074D9 inset;
+    color: #0074D9;
+  }
+  .box {
+    border: 2px solid grey;
+    color: grey;
+    border-radius: 5px;
+    background: #d7d7dd;
+    width: 80% !important;
+    height: auto;
+    margin-bottom: 30px;
+    margin-top: 30px;
+    margin-left: 15px !important;
+    text-indent: 15px;
+    box-shadow: 5px 5px 2px grey;
+    box-sizing: border-box;
+  }
+  .box-2{
+    box-sizing: content-box;
+    border: 2px;
+    color: black;
+  }
+  .bttn2 {
+    width: 50%;
+    position: inherit;
+  }
 </style>
 
   <div class="container">
@@ -40,7 +75,7 @@
   </div>
 <hr><hr>
 {% ifnotequal user pro_user%}
-  <button type="button" name="button" class="btn btn-warning btn-lg" id="follow" data-username="{{pro_user.username}}">follow</button>
+  <button type="button" name="button" class="btn bttn btn-lg" id="follow" data-username="{{pro_user.username}}">follow</button>
 {% endifnotequal %}
 <hr>
 <hr>
@@ -62,6 +97,80 @@
     </div>
   </div>
   {% endifequal %}
+  <div class="container">
+    {% ifequal user pro_user %}
+      <div>
+        {% for post in post_list_user %}
+        <div class="container box">
+          <div class="row">
+            <div class="col-sm-3">
+              <img src="/media/{{ profile.display_picture }}"  class="img-size" alt=""/>
+            </div>
+            <div class="col-sm-9">
+              <h3>{{ post.user.username }}</h3>
+            </div>
+          </div>
+          <div class="row">
+            <h6>{{ post.post_time }}</h6>
+          </div>
+          <hr class="seen">
+          <div class="row">
+            <div class="container box-2">
+              {{ post.content }}
+            </div>
+          </div>
+          <hr class="seen">
+          <div class="row">
+            <div class="col-sm-6">
+              <h6>Likes:<strong id="like-count{{post.id}}"></strong></h6>
+              <button type="submit" id="like{{post.id}}" data-pid={{ post.id }} class="btn btn-xs btn-info  bttn2">Like</button>
+            </div>
+            <div class="col-sm-6">
+              <h6>Comments:<strong>{{ post.comments }}</strong></h6>
+              <a href="/show_post/{{ post.id }}" class="btn btn-xs btn-danger bttn2">Comment</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+    <div>
+      {% for post in post_list_pro %}
+        <div class="container box">
+          <div class="row">
+            <div class="col-sm-3">
+              <img src="/media/{{ pro_profile.display_picture }}"  class="img-size" alt=""/>
+            </div>
+            <div class="col-sm-9">
+              <h3>{{ post.user.username }}</h3>
+            </div>
+          </div>
+          <div class="row">
+            <h6>{{ post.post_time }}</h6>
+          </div>
+          <hr class="seen">
+          <div class="row">
+            <div class="container box-2">
+              {{ post.content }}
+            </div>
+          </div>
+          <hr class="seen">
+          <div class="row">
+            <div class="col-sm-6">
+              <h6>Likes:<strong id="like-count{{post.id}}"></strong></h6>
+              <button type="submit" id="like{{post.id}}" data-pid={{ post.id }} class="btn btn-xs btn-info like bttn2">Like</button>
+            </div>
+            <div class="col-sm-6">
+              <h6>Comments:<strong>{{ post.comments }}</strong></h6>
+              <a href="/show_post/{{ post.id }}" class="btn btn-xs btn-danger bttn2 ">Comment</a>
+            </div>
+          </div>
+        </div>
+  {% endfor %}
+    </div>
+  {% endifequal %}
+  </div>
+
 </div>
 
 <script>
@@ -83,6 +192,54 @@ $(function(){
   $('#flwr').hide();
   $("#follower").click(function(){
     $('#flwr').toggle();
+  });
+});
+$(function(){
+  $(".like").click(function(event){
+    var pid = $(event.target).attr('data-pid');
+    var id = $(event.target).attr('id');
+    var lk ="#"+"like-count" +pid;
+    var lp ="#"+"like"+pid;
+    $.ajax({
+      type:'get',
+      url:'/like_post',
+      data:{
+        'pid':pid,
+        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+      },
+      success:function(data){
+        $(lk).html(data.count);
+        if(data.liked)
+          $(lp).css('background-color',"blue");
+        else{
+          $(lp).css('background-color',"#69dbf7");
+        }
+      },
+    });
+    });
+  });
+
+
+$(function(){
+  $('#success-alert').hide();//hiding the success alert at loading of page
+  $('.like').each(function(event){
+    var pid = $(this).attr('data-pid');
+    var lk = '#'+'like-count'+pid;
+    var lp ="#"+"like"+pid;
+    $.ajax({
+      type:'get',
+      url:'/like_count',
+      data:{
+        'pid':pid,
+        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+      },
+      success:function(data){
+        $(lk).html(data.count);
+        if(data.liked_this){
+          $(lp).css("background-color","blue");
+        }
+        }
+    });
   });
 });
 </script>

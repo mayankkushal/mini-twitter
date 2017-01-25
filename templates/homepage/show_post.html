@@ -1,6 +1,7 @@
 {%extends 'mtweet/base.html'%}
 {% load staticfiles %}
 
+{% block title_block %}{{ post.user }}{% endblock %}
 {% block body_block %}
 <style media="screen">
   input[type='text']{
@@ -36,12 +37,12 @@
   </div>
 
   <div class="container">
-    <h1>comments</h1>
+    <h1>Comments</h1>
     <ul id="show_comm">
 
     </ul>
     {% if not comment_list %}
-    <li>No comments. Be the first one to comment!</li>
+    <li>No comments. Be the first one!</li>
     {% else %}
     {% for comment in comment_list %}
     <ul>

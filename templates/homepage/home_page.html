@@ -5,16 +5,27 @@
 
 {% block body_block %}
 <style media="screen">
+  body {
+    overflow-x: hidden;
+  }
   .box {
     border: 2px solid grey;
-    border-radius: 10px;
-    color: black;
+    color: grey;
+    border-radius: 5px;
+    background: #d7d7dd;
     width: 80% !important;
     height: auto;
     margin-bottom: 30px;
     margin-top: 30px;
     margin-left: 15px !important;
     text-indent: 15px;
+    box-shadow: 5px 5px 2px grey;
+    box-sizing: border-box;
+  }
+  .box-2{
+    box-sizing: content-box;
+    border: 2px;
+    color: black;
   }
   textarea {
     width: 65%;
@@ -26,20 +37,28 @@
   }
   .bttn {
     width: 50%;
-    position: inherit;;
+    position: inherit;
   }
   .img-size{
     width: 50%;
     border-radius: 50%;
   }
+  strong{
+    color:black;
+  }
 </style>
 <div class="container">
+  <div class="alert alert-success" id="success-alert">
+      <button type="button" class="close" data-dismiss="alert">x</button>
+      <strong>Success! </strong>
+      You have Mini-Tweeted
+  </div>
   <div class="container">
-    <h1>hello, {{user.username}}</h1>
+    <h1>hello, {{request.user.username}}</h1>
   </div>
   <!--post form-->
   <div class="container">
-    <form class="form" action="/{{user.username}}/add_post" method="post">
+    <form class="form" action="/{{request.user.username}}/add_post" method="post" id='post-form'>
       {% csrf_token %}
     {% for hidden in postform.hidden_fields %}
       {{hidden}}
@@ -50,6 +69,7 @@
       <input type="submit" value="Post" class="btn btn-success btn-lg">
     </form>
   </div>
+  {{unread}}
   <!--end post form-->
   <hr>
   <hr>
@@ -60,7 +80,7 @@
         <div class="container box">
           <div class="row">
             <div class="col-sm-3">
-              <img src="/media/{{ profile.display_picture }}"  class="img-size" alt=""/>
+              <img src="/media/{{ pro_profile.display_picture }}"  class="img-size" alt=""/>
             </div>
             <div class="col-sm-9">
               <h3>{{ post.user.username }}</h3>
@@ -71,13 +91,15 @@
           </div>
           <hr class="seen">
           <div class="row">
-            {{ post.content }}
+            <div class="container box-2">
+              {{ post.content }}
+            </div>
           </div>
           <hr class="seen">
           <div class="row">
             <div class="col-sm-6">
-              <h6>Likes:<strong id="like-count{{post.id}}">{{ post.likes }}</strong></h6>
-              <button type="submit" id="like{{post.id}}" data-pid={{ post.id }} class="btn btn-xs btn-success bttn like">Like</button>
+              <h6>Likes:<strong id="like-count{{post.id}}"></strong></h6>
+              <button type="submit" id="like{{post.id}}" data-pid={{ post.id }} class="btn btn-xs btn-info bttn like">Like</button>
             </div>
             <div class="col-sm-6">
               <h6>Comments:<strong>{{ post.comments }}</strong></h6>
@@ -97,11 +119,70 @@ $(function(){
     var id = $(event.target).attr('id');
     var lk ="#"+"like-count" +pid;
     var lp ="#"+"like"+pid;
-    $.get('/like_post', {'pid':pid}, function(data){
-      $(lk).html(data);
-      $(lp).hide();
+    $.ajax({
+      type:'get',
+      url:'/like_post',
+      data:{
+        'pid':pid,
+        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+      },
+      success:function(data){
+        $(lk).html(data.count);
+        if(data.liked)
+          $(lp).css('background-color',"blue");
+        else{
+          $(lp).css('background-color',"#69dbf7");
+        }
+      },
+    });
+    });
+  });
+
+
+$(function(){
+  $('#success-alert').hide();//hiding the success alert at loading of page
+  $('.like').each(function(event){
+    var pid = $(this).attr('data-pid');
+    var lk = '#'+'like-count'+pid;
+    var lp ="#"+"like"+pid;
+    $.ajax({
+      type:'get',
+      url:'/like_count',
+      data:{
+        'pid':pid,
+        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+      },
+      success:function(data){
+        $(lk).html(data.count);
+        if(data.liked_this){
+          $(lp).css("background-color","blue");
+        }
+        }
     });
   });
 });
+
+$(document).on('submit','#post-form', function(e){
+  e.preventDefault();
+  $.ajax({
+    type:'post',
+    url:'/add_post',
+    data:{
+      'content':$('#id_content').val(),
+      csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+    },
+    success:function(data){
+        $('#id_content').val('');
+        $("#success-alert").alert();
+        $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+          $("#success-alert").slideUp(500);
+        });   
+    },
+  });
+});
+
+
 </script>
+
+
 {% endblock %}
