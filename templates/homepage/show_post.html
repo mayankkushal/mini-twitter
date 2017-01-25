@@ -65,7 +65,6 @@
       csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
       },
       success:function(data){
-          alert('commeted');
           $('#id_comment').val('');
           $("#show_comm").append('<li><strong>' + data.user + "</strong> says: " + data.comment + '</li>');
       },
